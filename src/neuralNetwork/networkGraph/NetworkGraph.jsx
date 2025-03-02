@@ -29,22 +29,22 @@ export default class Network extends React.Component {
     this.buildNetwork();
   }
   shouldComponentUpdate(nextProps) {
-    // return true
+    return true
     // console.log('assds', nextProps.snapshotIndex, this.props.snapshotIndex)
-    if (nextProps.snapshotIndex !== this.props.snapshotIndex) {
-      return true;
-    }
-    if (!!nextProps.selectedDrawing !== !!this.props.selectedDrawing) {
-      return true;
-    }
-    if (
-      nextProps.selectedDrawing &&
-      calcDrawingHash(nextProps.selectedDrawing.x) !==
-        calcDrawingHash(this.props.selectedDrawing.x)
-    ) {
-      return true;
-    }
-    return false;
+    // if (nextProps.snapshotIndex !== this.props.snapshotIndex) {
+    //   return true;
+    // }
+    // if (!!nextProps.selectedDrawing !== !!this.props.selectedDrawing) {
+    //   return true;
+    // }
+    // if (
+    //   nextProps.selectedDrawing &&
+    //   calcDrawingHash(nextProps.selectedDrawing.x) !==
+    //     calcDrawingHash(this.props.selectedDrawing.x)
+    // ) {
+    //   return true;
+    // }
+    // return false;
   }
   componentDidUpdate() {
     this.buildNetwork();
