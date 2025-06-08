@@ -40,6 +40,8 @@ export default function (
 
   const elems = svg.selectAll(".output-nodes").data(nodes);
 
+  elems.exit().remove();
+
   const enteringElems = elems
     .enter()
     .append("g")
@@ -67,6 +69,92 @@ export default function (
   enteringElems.append("text").attr("class", "output-number-label");
 
   enteringElems.append("text").attr("class", "percentage-label");
+
+  enteringElems
+    .select(".output-rect")
+    .attr(
+      "width",
+      graphConstants.OUTPUT_LAYER_NODE_WIDTH - graphConstants.OUTPUT_LAYER_LABEL,
+    )
+    .attr("height", yScale(1) - 4)
+    .attr("ry", 3)
+    .attr("fill", (d, i) =>
+      hasTrainingPoint
+        ? i === maxIndex
+          ? graphConstants.WITH_TRAINING_ON
+          : graphConstants.WITH_TRAINING_OFF
+        : graphConstants.NO_TRAINING_POSITIVE,
+    );
+
+  enteringElems
+    .select(".overlapping-rect")
+    .attr(
+      "width",
+      graphConstants.OUTPUT_LAYER_NODE_WIDTH - graphConstants.OUTPUT_LAYER_LABEL,
+    )
+    .attr("ry", 3)
+    .attr("fill", graphConstants.NO_TRAINING_NEGATIVE)
+    .attr("height", (d, i) => {
+      if (hasTrainingPoint) {
+        return 0;
+      }
+      const { correctCount, wrongCount } = testResultsSummary[i] || {
+        correctCount: 0,
+        wrongCount: 1,
+      };
+      let height = (1 - correctCount / (wrongCount + correctCount)) * yScale(1);
+      return Math.min(height, yScale(1) - 4);
+    });
+
+  enteringElems
+    .select(".percentage-label")
+    .attr(
+      "dx",
+      (graphConstants.OUTPUT_LAYER_NODE_WIDTH - graphConstants.OUTPUT_LAYER_LABEL) /
+        2,
+    )
+    .attr("dy", yScale(1) / 2)
+    .attr("font-size", 10)
+    .attr("text-anchor", "middle")
+    .attr("stroke-width", ".8")
+    .attr("stroke", "white")
+    .text((d, i) => {
+      if (hasTrainingPoint) {
+        return d.activation;
+      }
+      const { correctCount, wrongCount } = testResultsSummary[i] || {
+        correctCount: 0,
+        wrongCount: 1,
+      };
+      return `${Math.round(
+        (correctCount / (wrongCount + correctCount)) * 100,
+      )}%`;
+    });
+
+  enteringElems
+    .select(".output-number-label")
+    .attr("dx", graphConstants.OUTPUT_LAYER_NODE_WIDTH)
+    .attr("dy", yScale(1) / 2 + 4)
+    .attr("stroke-width", "2")
+    .attr("font-size", 28)
+    .attr("text-anchor", "middle")
+    .attr("stroke", "rgb(60,60,60)")
+    .attr("cursor", "pointer")
+    .text((d, i) => i);
+
+  enteringElems
+    .select(".bias")
+    .attr(
+      "dx",
+      -graphConstants.BIAS_LABEL_WIDTH + graphConstants.BIAS_LABEL_WIDTH / 2,
+    )
+    .attr("dy", yScale(1) - yScale(1) / 2)
+    .attr("font-size", 10)
+    .attr("text-anchor", "middle")
+    .attr("stroke-width", ".5")
+    .attr("stroke", "black")
+    .attr("cursor", "pointer")
+    .text((d) => d.bias);
 
   elems
     .select(".output-rect")
