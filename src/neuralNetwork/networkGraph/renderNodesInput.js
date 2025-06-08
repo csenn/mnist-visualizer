@@ -9,10 +9,35 @@ export default function (svg, nodes, hasTrainingPoint) {
 
   const elems = svg.selectAll(".input-nodes").data(nodes);
 
+  elems.exit().remove();
+
   const enteringElems = elems
     .enter()
     .append("rect")
     .attr("class", "input-nodes");
+
+  enteringElems
+    .attr("width", graphConstants.INPUT_LAYER_NODE_WIDTH)
+    .attr("height", yScale(1))
+    .attr("stroke-width", ".1")
+    .attr("stroke", (d) =>
+      hasTrainingPoint
+        ? d.activation
+          ? graphConstants.WITH_TRAINING_ON
+          : graphConstants.WITH_TRAINING_OFF
+        : "black",
+    )
+    .attr("fill", (d) =>
+      hasTrainingPoint
+        ? d.activation
+          ? graphConstants.WITH_TRAINING_ON
+          : graphConstants.WITH_TRAINING_OFF
+        : "rgb(230, 230, 230)",
+    )
+    .attr("transform", (d, nodeIndex) => {
+      const y = yScale(nodeIndex);
+      return `translate(0, ${y})`;
+    });
 
   elems
     .attr("width", graphConstants.INPUT_LAYER_NODE_WIDTH)

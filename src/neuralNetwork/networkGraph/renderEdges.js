@@ -19,15 +19,29 @@ export default function (svg, edgeLayers, nodes, hasTrainingData) {
 
   const edgeBoxes = svg.selectAll(`.edge-layer`).data(edgeLayers);
 
-  edgeBoxes.enter().append("g").attr("class", "edge-layer");
+  edgeBoxes.exit().remove();
+
+  const edgeBoxesEnter = edgeBoxes
+    .enter()
+    .append("g")
+    .attr("class", "edge-layer");
+
+  edgeBoxesEnter
+    .attr("data-layer-index", (d, i) => i)
+    .attr("transform", (d) => null);
+
+  edgeBoxes
+    .attr("data-layer-index", (d, i) => i)
+    .attr("transform", (d) => null);
 
   const edges = edgeBoxes.selectAll(".edge").data((d) => d);
 
-  // Entering edges
-  edges.enter().append("line").attr("class", `edge`);
+  edges.exit().remove();
+
+  const edgesEnter = edges.enter().append("line").attr("class", `edge`);
 
   // Edge definitions
-  edges
+  edgesEnter
     .attr("x1", (d, i, layerIndex) => {
       if (layerIndex === 0) {
         return graphConstants.INPUT_LAYER_NODE_WIDTH;
@@ -95,5 +109,67 @@ export default function (svg, edgeLayers, nodes, hasTrainingData) {
       }
     });
 
-  // lines.exit().remove();
+  edges
+    .attr("x1", (d, i, layerIndex) => {
+      if (layerIndex === 0) {
+        return graphConstants.INPUT_LAYER_NODE_WIDTH;
+      }
+      if (hasTrainingData) {
+        return xScale(layerIndex) + graphConstants.BIAS_LABEL_WIDTH - 5;
+      }
+      return xScale(layerIndex) + graphConstants.BIAS_LABEL_WIDTH / 2 - 5;
+    })
+    .attr("x2", (d, i, layerIndex) => {
+      const { BIAS_LABEL_WIDTH, OUTPUT_LAYER_NODE_WIDTH } = graphConstants;
+      if (layerIndex === edgeLayers.length - 1) {
+        return (
+          xScale(layerIndex + 1) - BIAS_LABEL_WIDTH - OUTPUT_LAYER_NODE_WIDTH
+        );
+      }
+      if (hasTrainingData) {
+        return xScale(layerIndex + 1) - BIAS_LABEL_WIDTH;
+      }
+      return xScale(layerIndex + 1) - BIAS_LABEL_WIDTH / 2 - 5;
+    })
+    .attr("y1", (d, i, layerIndex) => {
+      return (
+        getYScale(layerIndex)(d.source.index) + getYScale(layerIndex)(1) / 2
+      );
+    })
+    .attr("y2", (d, i, layerIndex) => {
+      return (
+        getYScale(layerIndex + 1)(d.target.index) +
+        getYScale(layerIndex + 1)(1) / 2
+      );
+    })
+    .attr("stroke-width", (d, i, layerIndex) => {
+      const thicken = edgeLayers[layerIndex].length < 1000;
+      let zScore = Math.abs(d.zScore);
+      if (zScore > 6) {
+        zScore = 6;
+      }
+      if (hasTrainingData) {
+        if (thicken) {
+          return zScore * 0.8;
+        }
+        return zScore * 0.08;
+      } else {
+        if (thicken) {
+          return zScore * 0.6;
+        }
+        return zScore * 0.07;
+      }
+    })
+    .style("stroke", (d) => {
+      if (hasTrainingData) {
+        return d.isOn
+          ? graphConstants.WITH_TRAINING_ON
+          : graphConstants.WITH_TRAINING_OFF;
+      } else {
+        return d.weight > 0
+          ? graphConstants.NO_TRAINING_NEGATIVE
+          : graphConstants.NO_TRAINING_POSITIVE;
+      }
+    });
+
 }

@@ -24,27 +24,30 @@ export default class Network extends React.Component {
     super(props);
     this.chartSvg = React.createRef();
     this.buildNetwork = this.buildNetwork.bind(this);
+    this.prevStructureKey = null;
   }
   componentDidMount() {
     this.buildNetwork();
   }
   shouldComponentUpdate(nextProps) {
-    return true
-    // console.log('assds', nextProps.snapshotIndex, this.props.snapshotIndex)
-    // if (nextProps.snapshotIndex !== this.props.snapshotIndex) {
-    //   return true;
-    // }
-    // if (!!nextProps.selectedDrawing !== !!this.props.selectedDrawing) {
-    //   return true;
-    // }
-    // if (
-    //   nextProps.selectedDrawing &&
-    //   calcDrawingHash(nextProps.selectedDrawing.x) !==
-    //     calcDrawingHash(this.props.selectedDrawing.x)
-    // ) {
-    //   return true;
-    // }
-    // return false;
+    if (nextProps.snapshotIndex !== this.props.snapshotIndex) {
+      return true;
+    }
+
+    if (!!nextProps.selectedDrawing !== !!this.props.selectedDrawing) {
+      return true;
+    }
+
+    if (
+      nextProps.selectedDrawing &&
+      this.props.selectedDrawing &&
+      calcDrawingHash(nextProps.selectedDrawing.x) !==
+        calcDrawingHash(this.props.selectedDrawing.x)
+    ) {
+      return true;
+    }
+
+    return false;
   }
   componentDidUpdate() {
     this.buildNetwork();
@@ -72,6 +75,11 @@ export default class Network extends React.Component {
     );
     const hasTrainingPoint = !!selectedDrawing;
 
+    const structureKey = [
+      selectedSnapshot.weights[0][0].length,
+      ...selectedSnapshot.biases.map((l) => l.length),
+    ].join("-");
+
     const svg = d3
       .select(this.chartSvg.current)
       .attr("width", graphConstants.WIDTH + 2)
@@ -84,7 +92,10 @@ export default class Network extends React.Component {
       .select(".chart-svg-body")
       .attr("transform", `translate(0, ${graphConstants.HEADER_HEIGHT})`);
 
-    graphBody.selectAll("*").remove();
+    if (this.prevStructureKey !== structureKey) {
+      graphBody.selectAll("*").remove();
+      this.prevStructureKey = structureKey;
+    }
 
     // Render Nodes. Each Layer is different enough that it makes sense to split
     renderNodesInput(graphBody, nodes[0], hasTrainingPoint);
